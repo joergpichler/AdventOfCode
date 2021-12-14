@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 def parse(file):
     input = ''
@@ -11,25 +12,16 @@ def parse(file):
             rules[match.group(1)] = match.group(2)
     return (input, rules)
 
-def ensureDictEntry(key, dict):
-    if not key in dict:
-        dict[key] = 0
-
 def calcPolymer(input, rules, steps):
-    pairs = {}
-    chars = {}
+    pairs = defaultdict(int)
+    chars = defaultdict(int)
+    
     for i in range(len(input)- 1):
         pair = input[i:i+2]
-        if pair in pairs:
-            pairs[pair] += 1
-        else:
-            pairs[pair] = 1
+        pairs[pair] += 1
     for i in range(len(input)):
         char = input[i]
-        if char in chars:
-            chars[char] += 1
-        else:
-            chars[char] = 1
+        chars[char] += 1
             
     for i in range(steps):
         for pair, v in pairs.copy().items():
@@ -38,14 +30,11 @@ def calcPolymer(input, rules, steps):
             pairs[pair] -= v
             
             key = pair[0] + rule
-            ensureDictEntry(key, pairs)
             pairs[key] += v
             
             key = rule + pair[1]
-            ensureDictEntry(key, pairs)
             pairs[key] += v
             
-            ensureDictEntry(rule, chars)
             chars[rule] += v
     
     maxKey = max(chars, key=lambda key: chars[key])
