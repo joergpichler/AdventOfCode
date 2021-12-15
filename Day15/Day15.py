@@ -1,5 +1,6 @@
 import numpy as np
 from collections import defaultdict
+from datetime import datetime
 
 def parse(file):
     matrix = []
@@ -52,9 +53,12 @@ def djikstra(matrix):
                 predecessors[nextNode] = currentNode
             if not nextNode in queue:
                 queue.append(nextNode)
+        
+        if currentNode == (matrix.shape[0]-1, matrix.shape[1]-1):
+            break
     
-    if len(visited) != matrix.size:
-        raise Exception
+    #if len(visited) != matrix.size:
+    #    raise Exception
 
     return predecessors
 
@@ -96,9 +100,17 @@ def calcShortestDistance(matrix):
 
 def main():
     matrix = parse('input.txt')
+    start = datetime.now()
     calcShortestDistance(matrix)
+    end = datetime.now()
+    print(f'Pt1 took {str(end-start)}')
+    
     matrix = reshape(matrix, 5)
+    
+    start = datetime.now()
     calcShortestDistance(matrix)
+    end = datetime.now()
+    print(f'Pt2 took {str(end-start)}')
     
 if __name__ == '__main__':
     main()
