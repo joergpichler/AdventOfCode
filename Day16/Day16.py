@@ -1,3 +1,5 @@
+from math import prod
+
 class Packet:
     def __init__(self, data, mode = 'hex') -> None:
         self.__parse(data, mode)
@@ -75,10 +77,7 @@ class Packet:
                 case 0: # sum
                     return sum(map(lambda x: x.getValue(), self.sub_packets))
                 case 1: # product
-                    prod = 1
-                    for s in self.sub_packets:
-                        prod *= s.getValue()
-                    return prod
+                    return prod(map(lambda x: x.getValue(), self.sub_packets))
                 case 2: # minimum
                     return min(self.sub_packets, key=lambda x: x.getValue()).getValue()
                 case 3: # maximum
