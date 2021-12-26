@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Day23.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:Day23.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Day23.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Day23"
+        KeyDown="Window_OnKeyDown"
+        PointerPressed="Window_OnPointerPressed">
+
+    <Window.Resources>
+        <views:SelectionToBorderConverter x:Key="SelectionToBorderConverter" />
+        <views:IsLockedToForegroundConverter x:Key="IsLockedToForegroundConverter" />
+        <views:PodToBackgroundConverter x:Key="PodToBackgroundConverter" />
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="ItemsControl > ContentPresenter">
+            <Setter Property="Canvas.Left" Value="{Binding Left}" />
+            <Setter Property="Canvas.Top" Value="{Binding Top}" />
+        </Style>
+    </Window.Styles>
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:Wall}">
+            <Border Width="20" Height="20" BorderBrush="Black" BorderThickness="1" Background="Gray" />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:Pod}">
+            <Border Width="20" Height="20"
+                    BorderBrush="{Binding IsSelected, Converter={StaticResource SelectionToBorderConverter}}"
+                    BorderThickness="1">
+                <Border.Background>
+                    <MultiBinding Converter="{StaticResource PodToBackgroundConverter}">
+                        <Binding Path="IsInTargetArea"></Binding>
+                        <Binding Path="CanMove"></Binding>
+                    </MultiBinding>
+                </Border.Background>
+                <TextBlock Foreground="{Binding IsLocked, Converter={StaticResource IsLockedToForegroundConverter}}"
+                           VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Type}">
+                </TextBlock>
+            </Border>
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+            <TextBlock Text="Used Energy: " VerticalAlignment="Center"></TextBlock>
+            <TextBlock Text="{Binding Score}" VerticalAlignment="Center"></TextBlock>
+            <Button Content="Undo" Click="UndoButton_OnClick"></Button>
+            <Button Content="Reset" Click="ResetButton_OnClick"></Button>
+        </StackPanel>
+        <ItemsControl Items="{Binding Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </DockPanel>
+
+</Window>
