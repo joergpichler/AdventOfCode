@@ -2,17 +2,17 @@
 using System.Reflection;
 using MathNet.Numerics.LinearAlgebra;
 
-var scanners = ReadInput("input.txt");
+var scanners = ReadInput("test.txt");
 
 var baseScanner = scanners[0];
 baseScanner.RelativeOrigin = Vector<double>.Build.Dense(3, 0.0);
-var unassigendScanners = scanners.Skip(1).ToList();
+var unassignedScanners = scanners.Skip(1).ToList();
 
-while (unassigendScanners.Count > 0)
+while (unassignedScanners.Count > 0)
 {
     Scanner? matchedScanner = null;
 
-    foreach (var scanner in unassigendScanners)
+    foreach (var scanner in unassignedScanners)
     {
         if (ScannerMatcher.Matches(baseScanner, scanner))
         {
@@ -28,7 +28,7 @@ while (unassigendScanners.Count > 0)
 
     ScannerMatcher.Match(baseScanner, matchedScanner);
 
-    unassigendScanners.Remove(matchedScanner);
+    unassignedScanners.Remove(matchedScanner);
 }
 
 Console.WriteLine($"{baseScanner.Beacons.Count}");
@@ -174,6 +174,8 @@ class BeaconDistance
         var dz = BeaconB.Z - BeaconA.Z;
 
         Vector = Vector<double>.Build.DenseOfArray(new double[] {dx, dy, dz});
+
+        Id = string.Join('-', new[] {dx, dy, dz}.Select(Math.Abs).OrderBy(x => x).Select(x => x.ToString()));
     }
 
     public Beacon BeaconA { get; }
@@ -207,6 +209,8 @@ class BeaconDistance
     {
         return new BeaconDistance(BeaconB, BeaconA);
     }
+
+    public string Id { get; }
 }
 
 static class ScannerMatcher
@@ -214,10 +218,10 @@ static class ScannerMatcher
     public static bool Matches(Scanner baseScanner, Scanner scanner)
     {
         // To match at least 12 points in 2 systems at least 66 (11 + 10 + 9 + ...) distances must match
-        var matchingDistancesCount = baseScanner.BeaconDistances.Select(x => x.Distance)
-            .Intersect(scanner.BeaconDistances.Select(x => x.Distance))
+        var matchingDistancesCount = baseScanner.BeaconDistances.Select(x => x.Id)
+            .Intersect(scanner.BeaconDistances.Select(x => x.Id))
             .Count();
-        return matchingDistancesCount >= 10;
+        return matchingDistancesCount >= 66;
     }
 
     public static void Match(Scanner baseScanner, Scanner scanner)
@@ -227,15 +231,21 @@ static class ScannerMatcher
             throw new Exception("Scanners do not match");
         }
 
-        var baseDistances = baseScanner.BeaconDistances.GroupBy(x => x.Distance).ToDictionary(x => x.Key, x => x.First());
+        var baseDistances = baseScanner.BeaconDistances.GroupBy(x => x.Id).ToDictionary(x => x.Key, x => x.ToList());
 
         List<(BeaconDistance baseDistances, BeaconDistance targetDistance)> distanceMatches = new();
 
         foreach (var beaconDistance in scanner.BeaconDistances)
         {
-            if (!baseDistances.TryGetValue(beaconDistance.Distance, out var baseDistance))
+            if (!baseDistances.TryGetValue(beaconDistance.Id, out var baseDistanceMatches))
             {
                 continue;
+            }
+
+            var baseDistance = baseDistanceMatches.First();
+            if (baseDistanceMatches.Count > 1)
+            {
+                throw new Exception();
             }
 
             distanceMatches.Add((baseDistance, beaconDistance));
@@ -244,9 +254,11 @@ static class ScannerMatcher
         var (transformationMatrix, translationVector) = FindTransformation(distanceMatches);
         scanner.RelativeOrigin = translationVector;
 
-        Console.WriteLine($"Scanner {scanner.Number}: {(int)translationVector[0]},{(int)translationVector[1]},{(int)translationVector[2]}");
+        Console.WriteLine(
+            $"Scanner {scanner.Number}: {(int) translationVector[0]},{(int) translationVector[1]},{(int) translationVector[2]}");
 
-        foreach (var transformedBeacon in scanner.Beacons.Select(x => x.Transform(transformationMatrix, translationVector)))
+        foreach (var transformedBeacon in scanner.Beacons.Select(x =>
+                     x.Transform(transformationMatrix, translationVector)))
         {
             if (baseScanner.Beacons.Contains(transformedBeacon))
             {
@@ -262,30 +274,25 @@ static class ScannerMatcher
     {
         Matrix<double> foundTransformation = null;
 
-        int ctr = 0;
-        while (foundTransformation == null && ctr < distanceMatches.Count)
+
+        foreach (var transformationMatrix in TransformationMatrices.Get())
         {
-            foreach (var transformationMatrix in TransformationMatrices.Get())
+            var baseDistance = distanceMatches[0].baseDistance;
+            var transformedTarget = distanceMatches[0].targetDistance.Transform(transformationMatrix);
+
+            if (baseDistance.Vector.Equals(transformedTarget.Vector))
             {
-                var baseDistance = distanceMatches[ctr].baseDistance;
-                var transformedTarget = distanceMatches[ctr].targetDistance.Transform(transformationMatrix);
-
-                if (baseDistance.Vector.Equals(transformedTarget.Vector))
-                {
-                    foundTransformation = transformationMatrix;
-                    break;
-                }
-
-                if (baseDistance.Vector.Equals(transformedTarget.Vector.Invert()))
-                {
-                    foundTransformation = transformationMatrix;
-                    break;
-                }
+                foundTransformation = transformationMatrix;
+                break;
             }
 
-            ctr++;
+            if (baseDistance.Vector.Equals(transformedTarget.Vector.Invert()))
+            {
+                foundTransformation = transformationMatrix;
+                break;
+            }
         }
-        
+
         if (foundTransformation == null)
         {
             throw new Exception("No transformation matrix found");
@@ -304,11 +311,7 @@ static class ScannerMatcher
 
         if (!distanceMatches.All(x => x.baseDistance.Vector.Equals(x.targetDistance.Vector)))
         {
-            var invalidMatches = distanceMatches.Where(x => !x.baseDistance.Vector.Equals(x.targetDistance.Vector)).ToList();
-            foreach (var invalidMatch in invalidMatches)
-            {
-                distanceMatches.Remove(invalidMatch);
-            }
+            throw new Exception();
         }
 
         var translation = Vector<double>.Build.Dense(new double[]
