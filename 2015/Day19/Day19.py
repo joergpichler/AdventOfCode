@@ -40,23 +40,21 @@ def get_steps(molecule: str, dict: dict):
             tmp[i] = k
     dict = tmp
     steps = 0
-    max_len = max([len(k) for k in dict])
     
     while molecule != 'e':
-        idx = 0
-        while idx < len(molecule):
-            for l in range(1,max_len+1):
-                sub_str = molecule[idx:idx+l]
-                if sub_str in dict and dict[sub_str] != 'e':
-                    molecule = replace_at(molecule, idx, dict[sub_str], len(sub_str))
-                    steps += 1
-                    idx += (len(dict[sub_str]) - 1)
-                    break
-                elif sub_str in dict and dict[sub_str] == 'e' and len(sub_str) == len(molecule):
-                    molecule = 'e'
-                    steps += 1
-            idx += 1
-        
+        original = molecule
+        for k, v in dict.items():
+            if v == 'e' and k == molecule:
+                steps += 1
+                molecule = 'e'
+            elif v == 'e':
+                continue
+            if k in molecule:
+                molecule = molecule.replace(k, v, 1)
+                steps += 1
+        if original == molecule:
+            raise Exception()
+
     return steps
 
 def main():
