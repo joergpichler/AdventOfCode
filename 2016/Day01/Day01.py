@@ -12,6 +12,9 @@ def _get_diff(c1, c2):
     for i in range(1, len + 1):
         yield (int(c1[0] + (dx / len) * i), int(c1[1] + (dy / len) * i))
 
+def _get_blocks(coord):
+    return abs(coord[0]) + abs(coord[1])
+
 def get_blocks(input: str, pt2: bool = False):
     instructions = _parse_instructions(input)
 
@@ -26,12 +29,7 @@ def get_blocks(input: str, pt2: bool = False):
         turn = instruction[:1]
         distance = int(instruction[1:])
 
-        if turn == 'R':
-            orientation = (orientation + 1) % 4
-        else:
-            orientation -= 1
-            if orientation == -1:
-                orientation = 3
+        orientation = (orientation + (1 if turn == 'R' else -1)) % 4
 
         if pt2:
             old_coords = tuple(coords)
@@ -49,11 +47,11 @@ def get_blocks(input: str, pt2: bool = False):
             new_coords = tuple(coords)
             for coord in _get_diff(old_coords, new_coords):
                 if coord in visited:
-                    return abs(coord[0]) + abs(coord[1])
+                    return _get_blocks(coord)
                 else:
                     visited.add(coord)
                 
-    return abs(coords[0]) + abs(coords[1])
+    return _get_blocks(coords)
 
 def test():
     assert get_blocks('R2, L3') == 5
