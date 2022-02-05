@@ -1,58 +1,66 @@
-import hashlib
-
-def hash(id, num):
-    str = f'{id}{num}'
-    hash = hashlib.md5(str.encode())
+def calculate_hash(text: str):
+    import hashlib
+    hash = hashlib.md5(text.encode())
     return hash.hexdigest()
 
-def get_next(id, num):
-    target = ''.zfill(5)
-    hashed = hash(id, num)
-    while hashed[:5] != target:
-        num += 1
-        hashed = hash(id, num)
-    return (hashed, num)
+def get_next_hash(prefix, start_number):
+    target = '0' * 5
+    
+    while True:
+        text = f'{prefix}{start_number}'
+        hash = calculate_hash(text)
+        
+        if hash[:5] == target:
+            break
+        
+        start_number += 1
+        
+    return (hash, start_number)
 
-def get_pw(id):
-    pw = ''
-    num = 0
+def calculate_password_v1(prefix):
+    password = ''
+    number = 0
+    
     for _ in range(8):
-        (hash, num) = get_next(id, num)
-        pw += hash[5]
-        num += 1
-    return pw
+        (hash, number) = get_next_hash(prefix, number)
+        password += hash[5]
+        number += 1
+        
+    return password
 
-def get_pw_2(id):
-    pw = {}
-    num = 0
-    while len(pw) < 8:
-        (hash, num) = get_next(id, num)
-        num += 1
+def calculate_password_v2(id):
+    password = {}
+    number = 0
+    
+    while len(password) < 8:
+        (hash, number) = get_next_hash(id, number)
+        number += 1
         try:
-            pos = int(hash[5])
+            position_in_password = int(hash[5])
         except ValueError:
             continue
         character = hash[6]
-        if pos < 8 and pos not in pw:
-            pw[pos] = character
-            #print(f'{pos} = {character}')
+        if position_in_password < 8 and position_in_password not in password:
+            password[position_in_password] = character
+            
     result = ''
     for i in range(8):
-        result += pw[i]
+        result += password[i]
+        
     return result
     
 def main():
-    id = 'abc'
-    assert get_pw(id) == '18f47a30'
-    assert get_pw_2(id) == '05ace8e3'
+    prefix = 'abc'
+    assert calculate_password_v1(prefix) == '18f47a30'
+    assert calculate_password_v2(prefix) == '05ace8e3'
     
-    id = 'wtnhxymk'
+    prefix = 'wtnhxymk'
     
-    pw = get_pw(id)
-    print(f'Pt1: {pw}')
+    password = calculate_password_v1(prefix)
+    print(f'Pt1: {password}')
 
-    pw = get_pw_2(id)
-    print(f'Pt2: {pw}')
+    password = calculate_password_v2(prefix)
+    print(f'Pt2: {password}')
 
 if __name__ == '__main__':
     main()

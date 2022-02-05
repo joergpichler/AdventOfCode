@@ -2,21 +2,21 @@ from collections import defaultdict
 import numpy as np
 
 def parse(file):
-    arr = []
+    lines = []
     with open(file, 'r') as f:
-        for l in f:
-            arr.append([x for x in l.strip()])
-    return np.array(arr)
+        for line in f:
+            lines.append([c for c in line.strip()])
+    return np.array(lines)
 
 def get_string(data, pt2 = False):
     result = ''
     for i in range(data.shape[1]):
-        col = data[:,i]
-        d = defaultdict(int)
-        for c in col:
-            d[c] += 1
-        c = sorted(d.items(), key=lambda x: -x[1])[-1 if pt2 else 0][0]
-        result += c
+        characters = data[:,i]
+        column_dict = defaultdict(int)
+        for character in characters:
+            column_dict[character] += 1
+        character = sorted(column_dict.items(), key=lambda x: -x[1])[-1 if pt2 else 0][0]
+        result += character
     return result
 
 def main():
