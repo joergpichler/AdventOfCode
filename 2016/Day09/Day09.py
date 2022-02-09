@@ -1,3 +1,5 @@
+import re
+
 class CompressedData:
     def __init__(self, data) -> None:
         self.data = data
@@ -6,19 +8,24 @@ class CompressedData:
     def length_v1(self):
         return self._calc_length(self.data, recursive=False)
 
+
     def _calc_length(self, data, multiplicator = 1, recursive = True):
-        import re
-        
         length = 0
-        match = re.search(r"\((\d+)x(\d+)\)", data)
-        while match is not None:
+        
+        while True:
+            match = re.search(r"\((\d+)x(\d+)\)", data)
+            if match is None:
+                break
+
             no_of_characters = int(match.group(1))
             repetitions = int(match.group(2))
             start_idx = match.span()[0]
             end_idx = match.span()[1]
 
+            # everything until the match is raw length
             length += start_idx
 
+            # extract the sub-string that belongs to the marker
             sub_data = data[end_idx:end_idx+no_of_characters]
 
             if recursive:
@@ -26,16 +33,18 @@ class CompressedData:
             else:
                 length += repetitions * len(sub_data)
 
+            # shorten the remaining string
             data = data[end_idx+no_of_characters:]
-
-            match = re.search(r"\((\d+)x(\d+)\)", data)
             
         length += len(data)
+        
         return length * multiplicator
+
 
     @property
     def length_v2(self):
         return self._calc_length(self.data)
+
 
 def test():
     assert CompressedData("ADVENT").length_v1 == 6
@@ -52,9 +61,11 @@ def test():
     assert CompressedData('(27x12)(20x12)(13x14)(7x10)(1x12)A').length_v2 == 241920
     assert CompressedData('(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN').length_v2 == 445
 
+
 def parse(file):
     with open(file, 'r') as f:
         return f.readline().strip()
+
 
 def main():
     test()
@@ -63,6 +74,7 @@ def main():
 
     print(f'Pt1: {compressed_data.length_v1}')
     print(f'Pt2: {compressed_data.length_v2}')
+
 
 if __name__ == '__main__':
     main()
