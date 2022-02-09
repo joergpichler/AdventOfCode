@@ -24,47 +24,48 @@ class IpAddress:
     def _aba_to_bab(aba):
         return f'{aba[1]}{aba[0]}{aba[1]}'
 
-    def get_supernet_sequences(self):
+    def _get_supernet_sequences(self):
         import re
+        # replace all hypernet sequences and return the remaining elements
         return re.sub("\[.+?\]", " ", self.str).split(" ")
 
-    def get_hypernet_sequences(self):
+    def _get_hypernet_sequences(self):
         import re
         return re.findall("\[(.+?)\]", self.str)
 
     def supports_tls(self):
-        abba_outside = False
+        abba_in_supernet = False
 
-        for ss in self.get_supernet_sequences():
-            if IpAddress._contains_abba(ss):
-                abba_outside = True
+        for supernet_sequence in self._get_supernet_sequences():
+            if IpAddress._contains_abba(supernet_sequence):
+                abba_in_supernet = True
                 break
 
-        if not abba_outside:
+        if not abba_in_supernet:
             return False
         
-        abb_inside = False
+        abba_in_hypernet = False
 
-        for hs in self.get_hypernet_sequences():
-            if IpAddress._contains_abba(hs):
-                abb_inside = True
+        for hypernet_sequence in self._get_hypernet_sequences():
+            if IpAddress._contains_abba(hypernet_sequence):
+                abba_in_hypernet = True
                 break
 
-        return not abb_inside
+        return not abba_in_hypernet
 
     def supports_ssl(self):
         abas = []
 
-        for ss in self.get_supernet_sequences():
-            for aba in IpAddress._get_abas(ss):
+        for supernet_seqeuence in self._get_supernet_sequences():
+            for aba in IpAddress._get_abas(supernet_seqeuence):
                 abas.append(aba)
         
         if len(abas) == 0:
             return False
 
-        for hs in self.get_hypernet_sequences():
+        for hypernet_sequence in self._get_hypernet_sequences():
             for bab in (IpAddress._aba_to_bab(aba) for aba in abas):
-                if bab in hs:
+                if bab in hypernet_sequence:
                     return True 
 
         return False
