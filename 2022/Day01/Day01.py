@@ -1,4 +1,5 @@
 from operator import attrgetter
+from typing import Tuple
 
 class Elf:
     def __init__(self) -> None:
@@ -10,9 +11,6 @@ class Elf:
     @property
     def total_calories(self) -> int:
         return sum(self._calories)
-
-    def __repr__(self) -> str:
-        return str(self.total_calories)
 
 def parse(file):
     elves = []
@@ -27,26 +25,22 @@ def parse(file):
         elves.append(elf)
     return elves
 
-def get_highest_calorie_count(elves):
-    return max(elves, key=attrgetter('total_calories')).total_calories
-
-def get_top3_calorie_count(elves):
-    sorted_list = sorted(elves, key=attrgetter('total_calories'), reverse=True)
-    return sorted_list[0].total_calories + sorted_list[1].total_calories + sorted_list[2].total_calories
+def calculate(elves: list[Elf]) -> Tuple[int, int]:
+    getter = attrgetter('total_calories')
+    sorted_list = sorted(elves, key=getter, reverse=True)
+    return (sorted_list[0].total_calories, sum(map(getter, sorted_list[:3])))
 
 def main():
     elves = parse('test.txt')
-    assert get_highest_calorie_count(elves) == 24000
-    assert get_top3_calorie_count(elves) == 45000
+    result = calculate(elves)
+    assert result[0] == 24000
+    assert result[1] == 45000
 
     elves = parse('input.txt')
-    max_calories = get_highest_calorie_count(elves)
-    top3_calories = get_top3_calorie_count(elves)
+    result = calculate(elves)
     
-    print(f'Pt1: {max_calories}')
-    print(f'Pt2: {top3_calories}')
-
-    pass
+    print(f'Pt1: {result[0]}')
+    print(f'Pt2: {result[1]}')
 
 if __name__ == '__main__':
     main()
