@@ -1,11 +1,9 @@
 import re
 
 class Stack:
-    def __init__(self, nr, iterable) -> None:
+    def __init__(self, nr) -> None:
         self._list = []
         self.nr = nr
-        for i in iterable:
-            self.push(i)
     
     def push(self, element):
         self._list.append(element)
@@ -31,15 +29,30 @@ class Instruction:
         self.amount = amount
 
 def parse(file):
+    stack_lines = []
+    stacks = []
     instructions = []
     with open(file, 'r') as f:
         for l in f:
+
+            if len(stacks) == 0:
+                for match in re.finditer(r'\d+', l):
+                    stack = Stack(int(match.group()))
+                    for s in reversed(stack_lines):
+                        if s[match.start()] != ' ':
+                            stack.push(s[match.start()])
+                    stacks.append(stack)
+                
+            if len(stacks) == 0:
+                stack_lines.append(l)
+
             match = re.match(r'^move (\d+) from (\d+) to (\d+)$', l)
             if match:
                 instructions.append(Instruction(int(match.group(2)), int(match.group(3)), int(match.group(1))))
-    return instructions
 
-def apply_instruction_2(stacks, i):
+    return (stacks, instructions)
+
+def apply_instruction_1(stacks, i):
     source_stack = stacks[i.from_ - 1]
     target_stack = stacks[i.to - 1]
     for _ in range(i.amount):
@@ -54,40 +67,25 @@ def apply_instruction_2(stacks, i):
 def get_word(stacks):
     return ''.join(map(lambda x: x.peek(), stacks))
 
-def get_test_stacks():
-    return [Stack(1, ['Z', 'N']),
-    Stack(2, ['M', 'C', 'D']),
-    Stack(3, ['P'])]
-
-def get_stacks():
-    return [Stack(1, ['W', 'D', 'G', 'B', 'H', 'R', 'V']),
-    Stack(2, ['J', 'N', 'G', 'C', 'R', 'F']),
-    Stack(3, ['L', 'S', 'F', 'H', 'D', 'N', 'J']),
-    Stack(4, ['J', 'D', 'S', 'V']),
-    Stack(5, ['S', 'H', 'D', 'R', 'Q', 'W', 'N', 'V']),
-    Stack(6, ['P', 'G', 'H', 'C', 'M']),
-    Stack(7, ['F', 'J', 'B', 'G', 'L', 'Z', 'H', 'C']),
-    Stack(8, ['S', 'J', 'R']),
-    Stack(9, ['L', 'G', 'S', 'R', 'B', 'N', 'V', 'M'])]
-
-def main():
-    test_stacks = get_test_stacks()
-
-    instructions = parse('test.txt')
+def run(file):
+    stacks, instructions = parse(file)
     for i in instructions:
-        apply_instruction_2(test_stacks, i)
-    
-    word = get_word(test_stacks)
-    print(word)
-
-    stacks = get_stacks()
-
-    instructions = parse('input.txt')
+        apply_instruction_1(stacks, i)
+    word1 = get_word(stacks)
+    stacks, instructions = parse(file)
     for i in instructions:
         apply_instruction_2(stacks, i)
-    
-    word = get_word(stacks)
-    print(word)
+    word2 = get_word(stacks)
+    return word1, word2
+
+def main():
+    result = run('test.txt')
+    assert result[0] == 'CMZ'
+    assert result[1] == 'MCD'
+
+    result = run('input.txt')
+    print(f'Pt1: {result[0]}')
+    print(f'Pt2: {result[1]}')
 
 if __name__ == '__main__':
     main()
