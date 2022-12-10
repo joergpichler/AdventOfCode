@@ -1,3 +1,5 @@
+import numpy as np
+
 class Machine:
     def __init__(self) -> None:
         self._reset()
@@ -5,10 +7,22 @@ class Machine:
     def _reset(self) -> None:
         self._x = 1
         self._signal_strengths = {20:0, 60:0, 100:0, 140:0, 180:0, 220:0}
+        self._crt = np.full((6, 40), False)
+        pass
     
     def _callback(self, cycle):
         if cycle in self._signal_strengths:
             self._signal_strengths[cycle] = cycle * self._x
+        row = cycle // self._crt.shape[1]
+        column = (cycle - 1) % self._crt.shape[1]
+        if self._x - 1 <= column <= self._x + 1:
+            self._crt[row, column] = True
+
+    def _draw(self):
+
+        for r in range(self._crt.shape[0]):
+            print(''.join(('#' if c else '.' for c in self._crt[r,:])))
+        print('')
 
     def run(self, instructions):
         cycle = 0
@@ -28,6 +42,7 @@ class Machine:
                 self._x += int(s[1])
         
         result = sum(self._signal_strengths.values())
+        self._draw()
         self._reset()
         return result
 
