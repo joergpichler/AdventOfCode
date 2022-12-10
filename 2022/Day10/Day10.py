@@ -13,7 +13,7 @@ class Machine:
     def _callback(self, cycle):
         if cycle in self._signal_strengths:
             self._signal_strengths[cycle] = cycle * self._x
-        row = cycle // self._crt.shape[1]
+        row = (cycle - 1) // self._crt.shape[1]
         column = (cycle - 1) % self._crt.shape[1]
         if self._x - 1 <= column <= self._x + 1:
             self._crt[row, column] = True
@@ -21,7 +21,7 @@ class Machine:
     def _draw(self):
 
         for r in range(self._crt.shape[0]):
-            print(''.join(('#' if c else '.' for c in self._crt[r,:])))
+            print(''.join(('█' if c else ' ' for c in self._crt[r,:])))
         print('')
 
     def run(self, instructions):
