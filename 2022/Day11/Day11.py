@@ -1,23 +1,4 @@
 import re
-import math
-
-class Item:
-
-
-    def __init__(self, value) -> None:
-        self.value = value
-
-    
-    def apply_func(self, func) -> None:
-        self.value = func(self.value)
-
-
-    def is_dividable_by(self, val):
-        return self.value % val == 0
-
-    
-    def __repr__(self) -> str:
-        return f'{self.value}'
 
 
 class Monkey:
@@ -30,7 +11,7 @@ class Monkey:
 
     def _parse(self, lines):
         self.number = int(re.search(r'\d+', lines[0]).group(0))
-        self.items = [Item(int(x)) for x in re.findall(r'\d+', lines[1])]
+        self.items = [int(x) for x in re.findall(r'\d+', lines[1])]
         self.func = eval(compile(f'lambda old: {lines[2].split("=")[1].strip()}', 'generated.py', 'eval'))
         self.div_test = int(re.search(r'divisible by (\d+)', lines[3]).group(1))
         self.true_case = int(re.search(r'If true: throw to monkey (\d+)', lines[4]).group(1))
@@ -57,17 +38,19 @@ def parse(file):
     return { m.number: m for m in monkeys }
 
 
-def play(monkeys, rounds, divide_by_three = True):
+def play(monkeys, rounds, supermodulo = 0):
     for _ in range(rounds):
         for i in range(len(monkeys)):
             monkey = monkeys[i]
             while(len(monkey.items) > 0):
                 monkey.items_inspected += 1
                 item = monkey.items.pop(0)
-                item.apply_func(monkey.func)
-                if divide_by_three:
-                    item.apply_func(lambda x: math.floor(x / 3))
-                if item.is_dividable_by(monkey.div_test):
+                item = monkey.func(item)
+                if supermodulo == 0:
+                    item = item // 3
+                else:
+                    item = item % supermodulo
+                if item % monkey.div_test == 0:
                     target_monkey = monkeys[monkey.true_case]
                 else:
                     target_monkey = monkeys[monkey.false_case]
@@ -76,14 +59,24 @@ def play(monkeys, rounds, divide_by_three = True):
     return l[0] * l[1]
 
 
+def get_supermodulo(monkeys):
+    supermodulo = 1
+    for m in monkeys.values():
+        supermodulo *= m.div_test
+    return supermodulo
+
+
 def main():
     monkeys = parse('test.txt')
     assert play(monkeys, 20) == 10605
-    #assert play(monkeys, 10000, False) == 2713310158
+    monkeys = parse('test.txt')
+    assert play(monkeys, 10000, get_supermodulo(monkeys)) == 2713310158
 
     monkeys = parse('input.txt')
     print(f'{play(monkeys, 20)}')
-    pass
+    monkeys = parse('input.txt')
+    print(f'{play(monkeys, 10000, get_supermodulo(monkeys))}')
+
 
 if __name__ == '__main__':
     main()
