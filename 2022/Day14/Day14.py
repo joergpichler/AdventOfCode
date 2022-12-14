@@ -1,6 +1,3 @@
-from functools import cache
-
-
 class Path:
 
 
@@ -32,45 +29,41 @@ class Path:
         return str(self._path)
 
 
-    @property
-    def max_y(self):
-        return max((p[1] for p in self._path))
-
-
-    @cache
-    def contains(self, pos):
+    def get_points(self):
         for i in range(len(self._path) - 1):
             p1 = self._path[i]
             p2 = self._path[i + 1]
             dx = p2[0] - p1[0]
             dy = p2[1] - p1[1]
-            if dx == 0 and p1[0] == pos[0]:
+            if dx == 0 and dy != 0:
                 min_y = min(p1[1], p2[1])
                 max_y = max(p1[1], p2[1])
-                if min_y <= pos[1] <= max_y:
-                    return True
-            if dy == 0 and p1[1] == pos[1]:
+                for i in range(min_y, max_y + 1):
+                    yield (p1[0], i)
+            elif dy == 0 and dx != 0:
                 min_x = min(p1[0], p2[0])
                 max_x = max(p1[0], p2[0])
-                if min_x <= pos[0] <= max_x:
-                    return True
-        return False
+                for i in range(min_x, max_x + 1):
+                    yield (i, p1[1])
+            else:
+                raise Exception
 
 
 def parse(file):
-    paths = []
+    paths = set()
     with open(file, 'r') as f:
         for l in f:
-            paths.append(Path(l.strip()))
+            path = Path(l.strip())
+            for p in path.get_points():
+                paths.add(p)
     return paths
 
 
 def is_blocked(pos, sand_set, paths):
     if pos in sand_set:
         return True
-    for p in paths:
-        if p.contains(pos):
-            return True
+    if pos in paths:
+        return True
     return False
 
 
@@ -104,7 +97,7 @@ def flow_sand(sand_pos, sand_set, paths, abyss_pos, part):
 
 
 def simulate_pt1(paths):
-    abyss = max((p.max_y for p in paths))
+    abyss = max((p[1] for p in paths))
     sand = set()
 
     while flow_sand((500, -1), sand, paths, abyss, 1):
@@ -114,7 +107,7 @@ def simulate_pt1(paths):
 
 
 def simulate_pt2(paths):
-    abyss = max((p.max_y for p in paths)) + 2
+    abyss = max((p[1] for p in paths)) + 2
     sand = set()
 
     while (500, 0) not in sand:
@@ -125,11 +118,11 @@ def simulate_pt2(paths):
 
 def main():
     paths = parse('test.txt')
-    #assert simulate_pt1(paths) == 24
+    assert simulate_pt1(paths) == 24
     assert simulate_pt2(paths) == 93
     
     paths = parse('input.txt')
-    #print(f'{simulate_pt1(paths)}')
+    print(f'{simulate_pt1(paths)}')
     print(f'{simulate_pt2(paths)}')
 
 
