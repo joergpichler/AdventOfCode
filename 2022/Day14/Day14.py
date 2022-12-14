@@ -1,3 +1,6 @@
+from functools import cache
+
+
 class Path:
 
 
@@ -34,6 +37,7 @@ class Path:
         return max((p[1] for p in self._path))
 
 
+    @cache
     def contains(self, pos):
         for i in range(len(self._path) - 1):
             p1 = self._path[i]
@@ -70,9 +74,13 @@ def is_blocked(pos, sand_set, paths):
     return False
 
 
-def flow_sand(sand_pos, sand_set, paths, abyss_pos):
+def flow_sand(sand_pos, sand_set, paths, abyss_pos, part):
     while True:
-        if sand_pos[1] >= abyss_pos:
+        if part == 1 and sand_pos[1] >= abyss_pos:
+            return False
+
+        if part == 2 and sand_pos[1] + 1 == abyss_pos:
+            sand_set.add(sand_pos)
             return False
 
         down_pos = (sand_pos[0], sand_pos[1] + 1)
@@ -99,18 +107,30 @@ def simulate_pt1(paths):
     abyss = max((p.max_y for p in paths))
     sand = set()
 
-    while flow_sand((500, -1), sand, paths, abyss):
+    while flow_sand((500, -1), sand, paths, abyss, 1):
         pass
+
+    return len(sand)
+
+
+def simulate_pt2(paths):
+    abyss = max((p.max_y for p in paths)) + 2
+    sand = set()
+
+    while (500, 0) not in sand:
+        flow_sand((500, -1), sand, paths, abyss, 2)
 
     return len(sand)
 
 
 def main():
     paths = parse('test.txt')
-    assert simulate_pt1(paths) == 24
+    #assert simulate_pt1(paths) == 24
+    assert simulate_pt2(paths) == 93
     
     paths = parse('input.txt')
-    print(f'{simulate_pt1(paths)}')
+    #print(f'{simulate_pt1(paths)}')
+    print(f'{simulate_pt2(paths)}')
 
 
 if __name__ == '__main__':
