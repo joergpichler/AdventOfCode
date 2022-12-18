@@ -52,11 +52,11 @@ class PushFactory:
 class Chamber:
     def __init__(self, push_factory: PushFactory) -> None:
         self._push_factory = push_factory
-        self._blocked_tiles = set()
+        self.blocked_tiles = set()
         
     @property
     def max_y(self):
-        return max(map(itemgetter(1), self._blocked_tiles)) if len(self._blocked_tiles) > 0 else 0
+        return max(map(itemgetter(1), self.blocked_tiles)) if len(self.blocked_tiles) > 0 else 0
 
     def _place_rock(self, rock: Rock):
         d_y = self.max_y + 3 + 1 # 0 is the floor
@@ -72,7 +72,7 @@ class Chamber:
             raise Exception
         tmp_pos = list(map(lambda p: (p[0] + d_x, p[1]), rock_pos))
         for p in tmp_pos:
-            if p in self._blocked_tiles:
+            if p in self.blocked_tiles:
                 return rock_pos
             if p[0] == 0 or p[0] == 8:
                 return rock_pos
@@ -82,7 +82,7 @@ class Chamber:
         d_y = -1
         tmp_pos = list(map(lambda p: (p[0], p[1] + d_y), rock_pos))
         for p in tmp_pos:
-            if p in self._blocked_tiles:
+            if p in self.blocked_tiles:
                 return rock_pos
             if p[1] == 0:
                 return rock_pos
@@ -94,10 +94,23 @@ class Chamber:
         while True:
             next_pos = self._fall_rock(rock_pos)
             if next_pos is rock_pos:
-                self._blocked_tiles.update(rock_pos)
+                self.blocked_tiles.update(rock_pos)
                 return
             rock_pos = next_pos
             rock_pos = self._push_rock(rock_pos, self._push_factory.get_next())
+    
+    def __repr__(self) -> str:
+        s = ''
+        for r in range(self.max_y, 0, -1):
+            r_s = ''
+            for c in range(1,8):
+                if (c, r) in self.blocked_tiles:
+                    r_s += '#'
+                else:
+                    r_s += '.'
+            s += r_s
+            s += "\n"
+        return s
 
 
 def parse(file: str) -> str:
@@ -105,8 +118,33 @@ def parse(file: str) -> str:
         line = f.readline().strip()
         return line
 
+def find_pattern(chamber: Chamber):
+    max_y = chamber.max_y
 
-def run_sim(pattern: str, count_rocks: int):
+    for i in range(10, max_y // 2): # start at 10 because otherwise 2 identical lines become a pattern
+        upper_part = np.zeros((i + 1, 7), dtype=np.int8)
+
+        for r in range(max_y, max_y - i - 1, -1):
+            for c in range(1, 8):
+                if (c, r) in chamber.blocked_tiles:
+                    upper_part[max_y - r, c - 1] = 1
+        
+        lower_part = np.zeros((i + 1, 7), dtype=np.int8)
+
+        for r in range(max_y - i - 1, max_y - i - 1 - i - 1, -1):
+            for c in range(1, 8):
+                if (c, r) in chamber.blocked_tiles:
+                    lower_part[max_y - i - 1 - r, c - 1] = 1
+
+
+        if np.array_equal(upper_part, lower_part):
+            print('pattern found')
+
+    return
+
+
+
+def run_sim(pattern: str, count_rocks: int, part2: bool = False):
     rock_factory = RockFactory()
     chamber = Chamber(PushFactory(pattern))
 
@@ -118,17 +156,20 @@ def run_sim(pattern: str, count_rocks: int):
             rock_idx = 0
         chamber.insert_rock(rock)
 
-    return chamber.max_y
+        if part2:
+            find_pattern(chamber)
+            pass # try to find a repeating pattern
 
+    return chamber.max_y
 
 def main():
     pattern = parse('test.txt')
-    assert run_sim(pattern, 2022) == 3068
-    #assert run_sim(pattern, 1000000000000) == 1514285714288
+    #assert run_sim(pattern, 2022) == 3068
+    #assert run_sim(pattern, 1000000000000, True) == 1514285714288
 
     pattern = parse('input.txt')
     #print(f'{run_sim(pattern, 2022)}')
-    #print(f'{run_sim(pattern, 1000000000000)}')
+    print(f'{run_sim(pattern, 1000000000000, True)}')
 
 
 if __name__ == '__main__':
