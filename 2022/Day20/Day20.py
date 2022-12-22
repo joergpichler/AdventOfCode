@@ -124,10 +124,8 @@ def calc_coords(linked_list: LinkedList):
 
 def mix(linked_list: LinkedList, times = 1):
     original_list = list(linked_list)
-    idx = 0
     for _ in range(times):
         for item in original_list:
-            idx += 1
             linked_list.move_item(item, item.item)
     return calc_coords(linked_list)
 
