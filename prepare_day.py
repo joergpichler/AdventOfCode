@@ -26,6 +26,9 @@ def main(argv):
     
     day = 'Day' + str(day).zfill(2)
     
+    if not os.path.exists(fr'{year}'):
+        os.mkdir(fr'{year}')
+
     if not os.path.exists(fr'{year}/{day}'):
         os.mkdir(fr'{year}/{day}')
     open(fr'{year}/{day}\input.txt', 'w').close()
