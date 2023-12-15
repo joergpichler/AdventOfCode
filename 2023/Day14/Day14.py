@@ -1,5 +1,46 @@
 import numpy as np
 
+class naive_cycle_detector:
+    def __init__(self, seq, min_cycle_len = 4) -> None:
+        self.seq = seq
+        self.min_cycle_len = min_cycle_len
+
+    def _detect_cycle(self, values):
+        cycle_len = self.min_cycle_len
+
+        while len(values) >= 2 * cycle_len:
+            last_elems = values[-cycle_len:]
+            elems = values[-2*cycle_len:-cycle_len]
+            
+            if last_elems == elems:
+                return len(values) - 2 * cycle_len, cycle_len
+            
+            cycle_len += 1
+            
+        return None, None
+
+    def detect_cycle(self):
+        self.values = []
+        
+        for _ in range(self.min_cycle_len * 2 - 1):
+            self.values.append(next(self.seq))
+        
+        for _ in range(100000):
+            self.values.append(next(self.seq))
+
+            cycle_start, cycle_length = self._detect_cycle(self.values)
+            if cycle_start is not None:
+                self.cycle_start = cycle_start
+                self.cycle_length = cycle_length
+                return cycle_start, cycle_length
+
+        raise Exception
+    
+    def get_element_at(self, p):
+        k = (p - self.cycle_start) % self.cycle_length
+        value = self.values[k + self.cycle_start - 1]
+        return value
+        
 def parse(file):
     with open(file, 'r') as f:
         return np.array([list(x.strip()) for x in f])
@@ -52,56 +93,23 @@ def calc_load(data):
 def pt1(data):
     data = tilt(data, 'N')
     return calc_load(data)
-    
-def pt2(data):
-    loads = []
-    for i in range(1000000000):
+
+def enumerate_results(data):
+    while True:
         data = tilt(data, 'N')
         data = tilt(data, 'W')
         data = tilt(data, 'S')
         data = tilt(data, 'E')
-        loads.append(calc_load(data))
-        if i > 0 and i % 1000 == 0:
-            cycle_start, cycle_length = find_cycle(loads)
-            if cycle_start is not None:
-                pass
-    return loads[-1]
+        yield calc_load(data)
 
-# chat gpt ftw
-def find_cycle(nums):
-    # Initialize two pointers, one slow (tortoise) and one fast (hare)
-    tortoise = nums[0]
-    hare = nums[0]
-
-    # Move hare two steps at a time and tortoise one step at a time
-    while True:
-        tortoise = nums[tortoise]
-        hare = nums[nums[hare]]
-
-        # If there is a cycle, the hare and tortoise will eventually meet
-        if tortoise == hare:
-            break
-
-    # Find the start of the cycle
-    tortoise = nums[0]
-    while tortoise != hare:
-        tortoise = nums[tortoise]
-        hare = nums[hare]
-
-    # The hare and tortoise will meet at the start of the cycle
-    cycle_start = hare
-
-    # Determine the length of the cycle
-    cycle_length = 1
-    hare = nums[hare]
-    while hare != cycle_start:
-        hare = nums[hare]
-        cycle_length += 1
-
-    return cycle_start, cycle_length
+def pt2(data):
+    detector = naive_cycle_detector(enumerate_results(data))
+    cycle_start, _ = detector.detect_cycle()
+    if cycle_start is not None:
+        return detector.get_element_at(1000000000)
+    pass
 
 def main():
-
     data = parse('test.txt')
     assert pt1(data) == 136
     data = parse('test.txt')
