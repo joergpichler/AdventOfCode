@@ -1,4 +1,5 @@
 import regex as re
+import math
 
 class Button:
     def __init__(self) -> None:
@@ -62,6 +63,22 @@ class Conjunction:
         else:
             yield 1
 
+class ObservingConjunction(Conjunction):
+    def __init__(self, conjunction, callback) -> None:
+        super().__init__(conjunction.id, conjunction.targets)
+        self._inputs = conjunction._inputs
+        self._callback = callback        
+
+    def trigger(self, source, pulse):
+        if not source in self._inputs:
+            raise Exception
+        self._callback(source, pulse)
+        self._inputs[source] = pulse
+        if sum((1 for x in self._inputs.values() if x)) == len(self._inputs):
+            yield 0
+        else:
+            yield 1
+
 class PulseQueue:
     def __init__(self) -> None:
         self.queue = []
@@ -94,9 +111,27 @@ class System:
             for module in (y for y in self.modules.values() if conjunction.id in y.targets):
                 conjunction.add_input(module.id)
 
-    def run(self):
+    def run(self, part2 = False):
+        if part2:
+            cycles = {}
+            def callback(source, pulse):
+                nonlocal cycles
+                nonlocal i
+                if pulse and cycles[source] == 0:
+                    #print(f'{source}: {i}')
+                    cycles[source] = i + 1
+                if all(x != 0 for x in cycles.values()):
+                    print(f'{math.lcm(*cycles.values())}')
+                    raise Exception
+
+            prev_rx_module = next(x for x in self.modules.values() if 'rx' in x.targets)
+            replacement = ObservingConjunction(prev_rx_module, callback)
+            self.modules[replacement.id] = replacement
+            cycles = { x:0 for x in replacement._inputs }
+
         queue = PulseQueue()
-        for _ in range(1000):            
+        iterations = 1000 if not part2 else 10000000000000
+        for i in range(iterations):            
             queue.addPulse(self.modules['button'], next(self.modules['button'].trigger(None, None)))
             while queue.hasPulses():
                 source, targets, pulse_value = queue.getPulse()
@@ -112,7 +147,6 @@ class System:
             #print()
             pass
         return queue.low_pulses * queue.high_pulses
-
 
 def module_factory(line):
     match = re.match(r'(.+)\s->\s(.+)', line)
@@ -140,6 +174,10 @@ def main():
     assert System(modules).run() == 11687500
     modules = parse('input.txt')
     print(System(modules).run())
-
+    try:
+        modules = parse('input.txt')
+        System(modules).run(True)
+    except:
+        pass
 if __name__ == '__main__':
     main()
