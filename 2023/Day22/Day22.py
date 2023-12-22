@@ -1,5 +1,6 @@
-import numpy as np
+import os
 import regex as re
+import concurrent.futures
 
 class Brick:
     def __init__(self, p1, p2) -> None:
@@ -57,13 +58,15 @@ def can_fall(brick, bricks):
     brick.move_z(1)
     return True
 
-def pt1(bricks):
+def run_simulation(bricks):
+    result = set()
     while True:
         brick_fell = False
         bricks.sort(key=lambda x: x.z_min)
         falling_bricks = 0
         for brick in bricks:
             if can_fall(brick, bricks):
+                result.add(brick)
                 brick.move_z(-1)
                 brick_fell = True           
                 falling_bricks += 1
@@ -72,6 +75,10 @@ def pt1(bricks):
 
         if not brick_fell:
             break
+    return result
+
+def pt1(bricks):
+    run_simulation(bricks)
 
     total = 0
     for brick in bricks:
@@ -85,12 +92,37 @@ def pt1(bricks):
             total += 1
     return total
 
+def do_work(i, file):
+    bricks = parse(file)
+    bricks.pop(i)
+    return len(run_simulation(bricks))
+
+def pt2(input):
+    if not os.path.exists(input + ".sim"):
+        bricks = parse(input)
+        run_simulation(bricks)
+        with open(input + ".sim", 'w') as f:
+            for brick in bricks:
+                f.write(brick.__repr__() + '\n')
+    n = len(parse(input + ".sim"))
+    
+    total = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit the tasks and collect the futures
+        futures = [executor.submit(do_work, i, input + ".sim") for i in range(n)]
+
+        # Wait for all tasks to complete and accumulate the total
+        total = sum(future.result() for future in concurrent.futures.as_completed(futures))
+ 
+        return total
 
 def main():
     bricks = parse('test.txt')
-    assert pt1(bricks) == 5
+    #assert pt1(bricks) == 5
+    assert pt2('test.txt') == 7
     bricks = parse('input.txt')
-    print(pt1(bricks))
+    #print(pt1(bricks))
+    print(pt2('input.txt'))
 
 if __name__ == '__main__':
     main()
