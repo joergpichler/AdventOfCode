@@ -26,24 +26,29 @@ abstract class Puzzle<TInput, TOutput>(private val day: Int, private val year: I
 
     abstract fun solvePart02(input: TInput): TOutput
 
+    open fun getTestData2() : String? {
+        return null
+    }
+
     fun runTest(): Puzzle<TInput, TOutput> {
         val input = getTestData()
+        val input2 = getTestData2()
         println("Test data")
-        run(input)
+        run(input, input2 ?: input)
         return this
     }
 
     fun run() {
         val input = inputCache.getInput(day, year).trimEnd()
         println("Input data")
-        run(input)
+        run(input, input)
     }
 
-    private fun run(input: String): Puzzle<TInput, TOutput> {
+    private fun run(input: String, input2: String): Puzzle<TInput, TOutput> {
         var parsedInput = parse(input)
         val resultPart01 = measureExecutionTime { solvePart01(parsedInput) }
         println("Pt1: ${resultPart01.first} (${resultPart01.second} ms)")
-        parsedInput = parse(input)
+        parsedInput = parse(input2)
         val resultPart02 = measureExecutionTime { solvePart02(parsedInput) }
         println("Pt2: ${resultPart02.first} (${resultPart02.second} ms)")
         return this
