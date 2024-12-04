@@ -49,7 +49,10 @@ abstract class Puzzle<TInput, TOutput>(private val day: Int, private val year: I
         val resultPart01 = measureExecutionTime { solvePart01(parsedInput) }
         println("Pt1: ${resultPart01.first} (${resultPart01.second} ms)")
         parsedInput = parse(input2)
-        val resultPart02 = measureExecutionTime { solvePart02(parsedInput) }
+        val resultPart02 = try { measureExecutionTime { solvePart02(parsedInput) } }
+        catch(exception: NotImplementedError) {
+            Pair(null, -1)
+        }
         println("Pt2: ${resultPart02.first} (${resultPart02.second} ms)")
         return this
     }
