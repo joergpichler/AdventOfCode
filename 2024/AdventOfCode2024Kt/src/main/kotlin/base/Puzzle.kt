@@ -26,34 +26,39 @@ abstract class Puzzle<TInput, TOutput>(private val day: Int, private val year: I
 
     abstract fun solvePart02(input: TInput): TOutput
 
-    open fun getTestData2() : String? {
+    open fun getTestData2(): String? {
         return null
     }
 
-    fun runTest(): Puzzle<TInput, TOutput> {
+    fun runTest(part: Int = -1): Puzzle<TInput, TOutput> {
         val input = getTestData()
         val input2 = getTestData2()
         println("Test data")
-        run(input, input2 ?: input)
+        run(input, input2 ?: input, part)
         return this
     }
 
-    fun run() {
+    fun run(part: Int = -1) {
         val input = inputCache.getInput(day, year).trimEnd()
         println("Input data")
-        run(input, input)
+        run(input, input, part)
     }
 
-    private fun run(input: String, input2: String): Puzzle<TInput, TOutput> {
-        var parsedInput = parse(input)
-        val resultPart01 = measureExecutionTime { solvePart01(parsedInput) }
-        println("Pt1: ${resultPart01.first} (${resultPart01.second} ms)")
-        parsedInput = parse(input2)
-        val resultPart02 = try { measureExecutionTime { solvePart02(parsedInput) } }
-        catch(exception: NotImplementedError) {
-            Pair(null, -1)
+    private fun run(input: String, input2: String, part: Int): Puzzle<TInput, TOutput> {
+        if (part == -1 || part == 1) {
+            val parsedInput = parse(input)
+            val resultPart01 = measureExecutionTime { solvePart01(parsedInput) }
+            println("Pt1: ${resultPart01.first} (${resultPart01.second} ms)")
         }
-        println("Pt2: ${resultPart02.first} (${resultPart02.second} ms)")
+        if (part == -1 || part == 2) {
+            val parsedInput = parse(input2)
+            val resultPart02 = try {
+                measureExecutionTime { solvePart02(parsedInput) }
+            } catch (exception: NotImplementedError) {
+                Pair(null, -1)
+            }
+            println("Pt2: ${resultPart02.first} (${resultPart02.second} ms)")
+        }
         return this
     }
 
