@@ -26,77 +26,41 @@ class Puzzle07 : Puzzle<List<Puzzle07Data>, Long>(7, 2024) {
     }
 
     override fun solvePart01(input: List<Puzzle07Data>): Long {
-        return input.filter { it.getNumOfSolutions(1) > 0 }.sumOf { it.result }
+        return input.filter { it.isValid(getOperations().take(2)) }.sumOf { it.result }
     }
 
     override fun solvePart02(input: List<Puzzle07Data>): Long {
-        return input.filter { it.getNumOfSolutions(2) > 0 }.sumOf { it.result }
+        return input.filter { it.isValid(getOperations()) }.sumOf { it.result }
     }
 }
 
 class Puzzle07Data(val result: Long, val numbers: List<Long>) {
-    fun getNumOfSolutions(part: Int): Int {
-        val combinations = if(part == 1) generateCombinations(numbers.size - 1) else generateCombinations2(numbers.size - 1)
-        var result = 0
-        for (combination in combinations) {
-            if (solve(combination)) {
-                result += 1
+    fun isValid(operations: List<(Long, Long) -> Long>): Boolean {
+        for(operation in operations) {
+            if(isValid(operation(numbers[0], numbers[1]), numbers.drop(2), operations)){
+                return true
             }
         }
-        return result
+        return false
     }
 
-    private fun solve(combination: List<Int>): Boolean {
-        var result = getOperation(combination[0])(numbers[0], numbers[1])
-
-        for (i in 2 until numbers.size) {
-            result = getOperation(combination[i - 1])(result, numbers[i])
+    private fun isValid(number: Long, numbers: List<Long>, operations: List<(Long, Long) -> Long>) : Boolean {
+        if(numbers.isEmpty()) {
+            return number == this.result
         }
-
-        return result == this.result
-    }
-
-    private fun generateCombinations(n: Int): List<List<Int>> {
-        val combinations = mutableListOf<List<Int>>()
-        val totalCombinations = 1 shl n // 2^N using bit shift
-
-        for (i in 0 until totalCombinations) {
-            val combination = mutableListOf<Int>()
-            for (j in 0 until n) {
-                // Check if the j-th bit in i is set (1) or not (0)
-                combination.add((i shr j) and 1)
+        for(operation in operations) {
+            if(isValid(operation(number, numbers[0]), numbers.drop(1), operations)){
+                return true
             }
-            combinations.add(combination)
         }
-
-        return combinations
+        return false
     }
+}
 
-    private fun generateCombinations2(n: Int): List<List<Int>> {
-        val combinations = mutableListOf<List<Int>>()
-        val totalCombinations = Math.pow(3.0, n.toDouble()).toInt() // 3^N
-
-        for (i in 0 until totalCombinations) {
-            val combination = mutableListOf<Int>()
-            var number = i
-            for (j in 0 until n) {
-                combination.add(number % 3) // Get the current digit in base 3
-                number /= 3 // Move to the next digit
-            }
-            combinations.add(combination)
-        }
-
-        return combinations
-    }
-
-    private fun getOperation(index: Int): (Long, Long) -> Long {
-        return when (index) {
-            0 -> { a, b -> a + b }
-            1 -> { a, b -> a * b }
-            2 -> { a, b -> (a.toString() + b.toString()).toLong() }
-            else -> throw IllegalArgumentException("Invalid operation index")
-        }
-    }
-
-
+fun getOperations(): List<(Long, Long) -> Long> {
+    return listOf(
+        { a, b -> a + b },
+        { a, b -> a * b },
+        { a, b -> (a.toString() + b.toString()).toLong() }
+    )
 }
