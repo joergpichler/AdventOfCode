@@ -1,6 +1,7 @@
 package de.pichlerj
 
 import de.pichlerj.base.Puzzle
+import de.pichlerj.utils.Point
 
 class Puzzle06 : Puzzle<Puzzle06Data, Int>(6, 2024) {
     override fun getTestData(): String {
@@ -109,8 +110,6 @@ class Guard(var position: Point, var direction: Direction) {
         return GuardState(position, direction)
     }
 }
-
-data class Point(val x: Int, val y: Int)
 
 enum class Direction {
     UP, DOWN, LEFT, RIGHT
