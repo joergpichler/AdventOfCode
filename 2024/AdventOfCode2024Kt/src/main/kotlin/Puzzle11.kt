@@ -2,7 +2,7 @@ package de.pichlerj
 
 import de.pichlerj.base.Puzzle
 
-class Puzzle11 : Puzzle<List<Long>, Int>(11, 2024) {
+class Puzzle11 : Puzzle<List<Long>, Long>(11, 2024) {
     override fun getTestData(): String {
         return "125 17"
     }
@@ -11,35 +11,56 @@ class Puzzle11 : Puzzle<List<Long>, Int>(11, 2024) {
         return input.split(" ").map { it.toLong() }
     }
 
-    override fun solvePart02(input: List<Long>): Int {
+    override fun solvePart02(input: List<Long>): Long {
         return solve(input, 75)
     }
 
-    override fun solvePart01(input: List<Long>): Int {
+    override fun solvePart01(input: List<Long>): Long {
         return solve(input, 25)
     }
 
-    fun solve(input: List<Long>, loops: Int): Int {
-        var list = input.toList()
+    fun solve(input: List<Long>, loops: Int): Long {
+        var result: Long = 0L
+        for (number in input) {
+            result += countNumbers(number, 0, loops)
+        }
+        return result
+    }
 
-        for (i in 0 until loops) {
-            val transformedList = mutableListOf<Long>()
-            for (num in list) {
-                if (num == 0L) {
-                    transformedList.add(1L)
-                } else if (num.toString().length % 2 == 0) {
-                    val str = num.toString()
-                    val firstHalf = str.substring(0, str.length / 2).toLong()
-                    val secondHalf = str.substring(str.length / 2).toLong()
-                    transformedList.add(firstHalf)
-                    transformedList.add(secondHalf)
-                } else {
-                    transformedList.add(num * 2024)
-                }
-            }
-            list = transformedList
+    fun countNumbers(number: Long, depth: Int, targetDepth: Int): Long {
+        val key = CacheKey(number, depth, targetDepth)
+        if (cache.containsKey(key)) {
+            return cache[key]!!
         }
 
-        return list.size
+        if (depth == targetDepth) {
+            return 1
+        }
+
+        if (number == 0L) {
+            val result = countNumbers(1L, depth + 1, targetDepth)
+            cache[key] = result
+            return result
+        }
+
+        if (number.toString().length % 2 == 0) {
+            val str = number.toString()
+            val firstHalf = str.substring(0, str.length / 2).toLong()
+            val secondHalf = str.substring(str.length / 2).toLong()
+            val firstHalfResult = countNumbers(firstHalf, depth + 1, targetDepth)
+            cache[CacheKey(firstHalf, depth + 1, targetDepth)] = firstHalfResult
+            val secondHalfResult = countNumbers(secondHalf, depth + 1, targetDepth)
+            cache[CacheKey(secondHalf, depth + 1, targetDepth)] = secondHalfResult
+            return firstHalfResult + secondHalfResult
+        }
+
+        val newNumber = number * 2024
+        val result = countNumbers(newNumber, depth + 1, targetDepth)
+        cache[CacheKey(newNumber, depth + 1, targetDepth)] = result
+        return result
     }
-}
+
+        private val cache = mutableMapOf<CacheKey, Long>()
+
+        data class CacheKey(val number: Long, val depth: Int, val targetDepth: Int)
+    }
