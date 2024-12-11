@@ -1,5 +1,5 @@
 package de.pichlerj
 
 fun main(args: Array<String>) {
-    Puzzle10().runTest().run()
+    Puzzle11().runTest().run()
 }
