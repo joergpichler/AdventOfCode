@@ -9,3 +9,7 @@ data class Point(val x: Int, val y: Int){
         return Point(this.x + vector.dx, this.y + vector.dy)
     }
 }
+
+fun Point.getStraightNeighbors(): List<Point> {
+    return straightDirections().map { it.toVector() }.map { this.addVector(it) }
+}

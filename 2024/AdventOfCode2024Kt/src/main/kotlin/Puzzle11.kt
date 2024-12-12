@@ -60,7 +60,7 @@ class Puzzle11 : Puzzle<List<Long>, Long>(11, 2024) {
         return result
     }
 
-        private val cache = mutableMapOf<CacheKey, Long>()
+    private val cache = mutableMapOf<CacheKey, Long>()
 
-        data class CacheKey(val number: Long, val depth: Int, val targetDepth: Int)
-    }
+    data class CacheKey(val number: Long, val depth: Int, val targetDepth: Int)
+}
