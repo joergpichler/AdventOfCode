@@ -11,6 +11,14 @@ enum class Direction {
     LowerLeft
 }
 
+fun horizontalDirections(): List<Direction> {
+    return listOf(Direction.Left, Direction.Right)
+}
+
+fun verticalDirections(): List<Direction> {
+    return listOf(Direction.Up, Direction.Down)
+}
+
 fun straightDirections(): List<Direction> {
     return listOf(Direction.Left, Direction.Up, Direction.Right, Direction.Down)
 }
