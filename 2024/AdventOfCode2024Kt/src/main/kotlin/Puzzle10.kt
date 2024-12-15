@@ -26,7 +26,7 @@ class Puzzle10 : Puzzle<Grid<Int>, Int>(10, 2024) {
                 } else {
                     s.toInt()
                 }
-            }
+            }.toMutableList()
         })
     }
 
@@ -40,7 +40,7 @@ class Puzzle10 : Puzzle<Grid<Int>, Int>(10, 2024) {
 
     private fun solve(input: Grid<Int>, trailsCounter: (List<List<Point>>) -> Int): Int {
         var result = 0
-        for (startLocation in input.find { it == 0 }) {
+        for (startLocation in input.findAll { it == 0 }) {
 
             val possibleTrails = mutableListOf<MutableList<Point>>()
             possibleTrails.add(mutableListOf(startLocation))

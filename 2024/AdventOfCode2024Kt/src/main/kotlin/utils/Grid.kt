@@ -1,6 +1,6 @@
 package de.pichlerj.utils
 
-class Grid<T>(private val data: List<List<T>>) {
+class Grid<T>(private val data: List<MutableList<T>>) {
 
     val width: Int
     val height: Int
@@ -13,7 +13,18 @@ class Grid<T>(private val data: List<List<T>>) {
         height = data.size
     }
 
-    fun find(func: (T) -> Boolean): Sequence<Point> = sequence {
+    fun find(func: (T) -> Boolean): Point? {
+        for (y in data.indices) {
+            for (x in data[y].indices) {
+                if (func(data[y][x])) {
+                    return Point(x, y)
+                }
+            }
+        }
+        return null
+    }
+
+    fun findAll(func: (T) -> Boolean): Sequence<Point> = sequence {
         for (y in data.indices) {
             for (x in data[y].indices) {
                 if (func(data[y][x])) {
@@ -21,6 +32,25 @@ class Grid<T>(private val data: List<List<T>>) {
                 }
             }
         }
+    }
+
+    fun findFromAlong(
+        startingPoint: Point,
+        along: Vector,
+        func: (T) -> Boolean,
+        funcAbort: ((T) -> Boolean)? = null
+    ): Point? {
+        var current = startingPoint.addVector(along)
+        while (isInBounds(current)) {
+            if (funcAbort != null && funcAbort(this[current])) {
+                return null
+            }
+            if (func(this[current])) {
+                return current
+            }
+            current = current.addVector(along)
+        }
+        return null
     }
 
     fun getNeighbors(point: Point, directions: List<Direction>, filter: (T) -> Boolean): Sequence<Point> {
@@ -49,6 +79,19 @@ class Grid<T>(private val data: List<List<T>>) {
             get(point)
         } else {
             null
+        }
+    }
+
+    operator fun set(position: Point, value: T) {
+        data[position.y][position.x] = value
+    }
+
+    fun print() {
+        for (y in data.indices) {
+            for (x in data[y].indices) {
+                print(data[y][x])
+            }
+            println()
         }
     }
 }

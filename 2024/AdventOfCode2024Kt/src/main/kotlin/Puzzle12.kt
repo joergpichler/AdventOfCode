@@ -18,7 +18,7 @@ class Puzzle12 : Puzzle<Grid<Char>, Long>(12, 2024) {
     }
 
     override fun parse(input: String): Grid<Char> {
-        return Grid(input.lines().map { it.toList() })
+        return Grid(input.lines().map { it.toMutableList() })
     }
 
     override fun solvePart02(input: Grid<Char>): Long {
