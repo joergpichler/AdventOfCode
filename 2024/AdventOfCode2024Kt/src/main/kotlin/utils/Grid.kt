@@ -74,6 +74,10 @@ class Grid<T>(private val data: List<MutableList<T>>) {
         return data[point.y][point.x]
     }
 
+    fun get(row: Int, col: Int) : T {
+        return data[row][col]
+    }
+
     fun getSafe(point: Point): T? {
         return if (isInBounds(point)) {
             get(point)
